@@ -10,6 +10,7 @@ class Workflow extends Model implements WorkflowContract
     protected $casts = [
         'conditions' => 'array',
         'actions'    => 'array',
+        'flow_json'  => 'array',
     ];
 
     protected $fillable = [
@@ -20,5 +21,6 @@ class Workflow extends Model implements WorkflowContract
         'condition_type',
         'conditions',
         'actions',
+        'flow_json',
     ];
 }

@@ -264,7 +264,7 @@
     "isDynamicEntry": true
   },
   "src/Resources/assets/css/app.css": {
-    "file": "assets/app-CtvsGmy_.css",
+    "file": "assets/app-DvsjYFQH.css",
     "src": "src/Resources/assets/css/app.css",
     "isEntry": true
   },
@@ -365,7 +365,7 @@
     "src": "src/Resources/assets/images/mobile-light-logo.svg"
   },
   "src/Resources/assets/js/app.js": {
-    "file": "assets/app-e0OotqZL.js",
+    "file": "assets/app-D9vxr0CH.js",
     "name": "app",
     "src": "src/Resources/assets/js/app.js",
     "isEntry": true,
@@ -416,7 +416,7 @@
       "node_modules/vue-cal/dist/drag-and-drop.es.js"
     ],
     "css": [
-      "assets/app-Bq66GvPf.css"
+      "assets/app-CtmaK-V6.css"
     ]
   },
   "src/Resources/assets/js/chart.js": {

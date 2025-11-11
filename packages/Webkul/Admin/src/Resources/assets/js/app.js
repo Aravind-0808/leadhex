@@ -130,5 +130,12 @@ app.directive("debounce", Debounce);
 app.directive("safe-html", DOMPurify);
 app.directive("tooltip", ToolTip);
 
+/**
+ * Global components registration.
+ */
+import WorkflowBuilder from "./components/workflows/WorkflowBuilder.vue";
+
+app.component("workflow-builder", WorkflowBuilder);
+
 export default app;
 

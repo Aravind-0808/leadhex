@@ -9,6 +9,7 @@ use Illuminate\View\View;
 use Webkul\Admin\DataGrids\Settings\WorkflowDataGrid;
 use Webkul\Admin\Http\Controllers\Controller;
 use Webkul\Automation\Repositories\WorkflowRepository;
+use Webkul\Automation\Helpers\Entity as EntityHelper;
 
 class WorkflowController extends Controller
 {
@@ -17,14 +18,17 @@ class WorkflowController extends Controller
      *
      * @return void
      */
-    public function __construct(protected WorkflowRepository $workflowRepository) {}
+    public function __construct(
+        protected WorkflowRepository $workflowRepository,
+        protected EntityHelper $entityHelper
+    ) {}
 
     /**
      * Display a listing of the workflow.
      */
     public function index(): View|JsonResponse
     {
-        if (request()->ajax()) {
+        if (request()->expectsJson() || request()->ajax()) {
             return datagrid(WorkflowDataGrid::class)->process();
         }
 
@@ -115,5 +119,99 @@ class WorkflowController extends Controller
         return response()->json([
             'message' => trans('admin::app.settings.workflows.index.delete-failed'),
         ], 400);
+    }
+
+    /**
+     * Save workflow JSON data.
+     */
+    public function saveJson(): JsonResponse
+    {
+        $data = request()->validate([
+            'name'      => 'required|string|max:255',
+            'flow_json' => 'required',
+            'id'        => 'nullable|integer|exists:workflows,id',
+        ]);
+
+        try {
+            if (!empty($data['id'])) {
+                // Update existing workflow
+                $workflow = $this->workflowRepository->update([
+                    'flow_json' => $data['flow_json'],
+                    'name'      => $data['name'],
+                ], $data['id']);
+
+                return response()->json([
+                    'success'     => true,
+                    'workflow_id' => $workflow->id,
+                    'message'     => 'Workflow updated successfully',
+                ]);
+            } else {
+                // Create new workflow
+                $workflow = $this->workflowRepository->create([
+                    'name'           => $data['name'],
+                    'flow_json'      => $data['flow_json'],
+                    'entity_type'    => 'leads', // Default entity type
+                    'event'          => 'lead.create', // Default event
+                    'condition_type' => 'and',
+                ]);
+
+                return response()->json([
+                    'success'     => true,
+                    'workflow_id' => $workflow->id,
+                    'message'     => 'Workflow created successfully',
+                ]);
+            }
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to save workflow: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Load workflow JSON data.
+     */
+    public function loadJson(int $id): JsonResponse
+    {
+        try {
+            $workflow = $this->workflowRepository->findOrFail($id);
+
+            return response()->json([
+                'success'   => true,
+                'id'        => $workflow->id,
+                'name'      => $workflow->name,
+                'flow_json' => $workflow->flow_json,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Workflow not found',
+            ], 404);
+        }
+    }
+
+    /**
+     * Get workflow configuration options (events, conditions, actions).
+     */
+    public function getOptions(): JsonResponse
+    {
+        try {
+            $events = $this->entityHelper->getEvents();
+            $conditions = $this->entityHelper->getConditions();
+            $actions = $this->entityHelper->getActions();
+
+            return response()->json([
+                'success'    => true,
+                'events'     => $events,
+                'conditions' => $conditions,
+                'actions'    => $actions,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to load options: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 }

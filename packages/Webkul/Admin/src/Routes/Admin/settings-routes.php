@@ -116,6 +116,13 @@ Route::prefix('settings')->group(function () {
         Route::put('edit/{id}', 'update')->name('admin.settings.workflows.update');
 
         Route::delete('{id}', 'destroy')->name('admin.settings.workflows.delete');
+
+        // Visual workflow editor routes
+        Route::post('save-json', 'saveJson')->name('admin.settings.workflows.save_json');
+
+        Route::get('load/{id}', 'loadJson')->name('admin.settings.workflows.load_json');
+
+        Route::get('options', 'getOptions')->name('admin.settings.workflows.get_options');
     });
 
     /**
