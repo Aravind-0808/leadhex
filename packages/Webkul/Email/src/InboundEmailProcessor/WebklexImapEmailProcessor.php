@@ -2,6 +2,7 @@
 
 namespace Webkul\Email\InboundEmailProcessor;
 
+use Illuminate\Support\Facades\Schema;
 use Webklex\IMAP\Facades\Client;
 use Webkul\Email\Enums\SupportedFolderEnum;
 use Webkul\Email\InboundEmailProcessor\Contracts\InboundEmailProcessor;
@@ -26,10 +27,12 @@ class WebklexImapEmailProcessor implements InboundEmailProcessor
     ) {
         $this->client = Client::make($this->getDefaultConfigs());
 
-        $this->client->connect();
+        if (Schema::hasTable('core_config')) {
+            $this->client->connect();
 
-        if (! $this->client->isConnected()) {
-            throw new \Exception('Failed to connect to the mail server.');
+            if (! $this->client->isConnected()) {
+                throw new \Exception('Failed to connect to the mail server.');
+            }
         }
     }
 
@@ -42,10 +45,26 @@ class WebklexImapEmailProcessor implements InboundEmailProcessor
     }
 
     /**
+     * Ensure the IMAP client is connected.
+     */
+    private function ensureConnected(): void
+    {
+        if (! $this->client->isConnected()) {
+            $this->client->connect();
+
+            if (! $this->client->isConnected()) {
+                throw new \Exception('Failed to connect to the mail server.');
+            }
+        }
+    }
+
+    /**
      * Process messages from all folders.
      */
     public function processMessagesFromAllFolders()
     {
+        $this->ensureConnected();
+
         try {
             $rootFolders = $this->client->getFolders();
 
@@ -217,6 +236,10 @@ class WebklexImapEmailProcessor implements InboundEmailProcessor
     protected function getDefaultConfigs(): array
     {
         $defaultConfig = config('imap.accounts.default');
+
+        if (! Schema::hasTable('core_config')) {
+            return $defaultConfig;
+        }
 
         $defaultConfig['host'] = core()->getConfigData('email.imap.account.host') ?: $defaultConfig['host'];
 
